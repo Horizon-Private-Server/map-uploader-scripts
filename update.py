@@ -31,10 +31,13 @@ def get_version_byte(path):
 def check_command(new_dir, latest_dir):
     """Compare new_dir with latest_dir and show differences."""
     new_versions = glob.glob(os.path.join(new_dir, "*.version"))
+    latest_versions = glob.glob(os.path.join(latest_dir, "*.version"))
     
     print(f"Checking differences between {new_dir} and {latest_dir}")
     print("=" * 60)
     
+    # Compare new maps with latest
+    print("NEW vs LATEST comparison:")
     for new_version_path in new_versions:
         version_filename = os.path.basename(new_version_path)
         latest_version_path = os.path.join(latest_dir, version_filename)
@@ -44,11 +47,21 @@ def check_command(new_dir, latest_dir):
         
         if os.path.exists(latest_version_path):
             if new_version != latest_version:
-                print(f"{version_filename}: NEW={new_version}, LATEST={latest_version}")
+                print(f"  {version_filename}: NEW={new_version}, LATEST={latest_version}")
             else:
-                print(f"{version_filename}: Same version ({new_version})")
+                print(f"  {version_filename}: Same version ({new_version})")
         else:
-            print(f"{version_filename}: NEW FILE (version={new_version})")
+            print(f"  {version_filename}: NEW FILE (version={new_version})")
+    
+    # List all maps in latest_dir
+    print(f"\nAll maps in {latest_dir}:")
+    if latest_versions:
+        for latest_version_path in sorted(latest_versions):
+            version_filename = os.path.basename(latest_version_path)
+            latest_version = get_version_byte(latest_version_path)
+            print(f"  {version_filename}: version {latest_version}")
+    else:
+        print("  (No maps found)")
 
 def update_command(new_dir, latest_dir):
     """Update version files and copy all files from new_dir to latest_dir."""
