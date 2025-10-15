@@ -28,8 +28,61 @@ def get_version_byte(path):
     except FileNotFoundError:
         return 0
 
+def normalize_new_dir_filenames(new_dir: str, latest_dir: str) -> None:
+    """
+    Pre-step to align filenames in new_dir with latest_dir.
+
+    For every file in new_dir, if replacing underscores with spaces yields a name
+    that exists in latest_dir (case-insensitive match), rename the file in
+    new_dir to that exact name (including the latest_dir's casing). This helps
+    ensure version checks and updates target the correct files.
+    """
+    try:
+        latest_names = {name.lower(): name for name in os.listdir(latest_dir)}
+    except FileNotFoundError:
+        # If latest_dir doesn't exist yet, nothing to normalize
+        return
+
+    try:
+        new_names = list(os.listdir(new_dir))
+    except FileNotFoundError:
+        return
+
+    for name in new_names:
+        # Only consider files (skip directories) and names with underscores
+        src_path = os.path.join(new_dir, name)
+        if not os.path.isfile(src_path):
+            continue
+
+        if "_" not in name:
+            continue
+
+        candidate = name.replace("_", " ")
+        target_actual = latest_names.get(candidate.lower())
+        if not target_actual:
+            # No match in latest_dir after underscore->space conversion
+            continue
+
+        dst_path = os.path.join(new_dir, target_actual)
+        if src_path == dst_path:
+            # Already correct
+            continue
+
+        if os.path.exists(dst_path):
+            # Avoid overwriting an existing file in new_dir
+            print(f"Skip rename (target exists): {name} -> {target_actual}")
+            continue
+
+        try:
+            os.rename(src_path, dst_path)
+            print(f"Renamed to match latest: {name} -> {target_actual}")
+        except OSError as e:
+            print(f"Failed to rename {name} -> {target_actual}: {e}")
+
 def check_command(new_dir, latest_dir):
     """Compare new_dir with latest_dir and show differences."""
+    # Normalize filenames in new_dir to match latest_dir naming
+    normalize_new_dir_filenames(new_dir, latest_dir)
     new_versions = glob.glob(os.path.join(new_dir, "*.version"))
     
     print(f"Checking differences between {new_dir} and {latest_dir}")
@@ -52,6 +105,8 @@ def check_command(new_dir, latest_dir):
 
 def update_command(new_dir, latest_dir):
     """Update version files and copy all files from new_dir to latest_dir."""
+    # Normalize filenames in new_dir to match latest_dir naming
+    normalize_new_dir_filenames(new_dir, latest_dir)
     new_versions = glob.glob(os.path.join(new_dir, "*.version"))
     
     print(f"Updating maps from {new_dir} to {latest_dir}")
@@ -109,4 +164,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
