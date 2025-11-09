@@ -97,7 +97,7 @@ def check_command(new_dir, latest_dir):
         
         if os.path.exists(latest_version_path):
             if new_version != latest_version:
-                print(f"{version_filename}: NEW={new_version}, LATEST={latest_version}")
+                print(f"{version_filename}: NEW={new_version}, CURRENT={latest_version}")
             else:
                 print(f"{version_filename}: Same version ({new_version})")
         else:
@@ -119,13 +119,14 @@ def update_command(new_dir, latest_dir):
         
         latest_version = get_version_byte(latest_version_path)
         new_version = (latest_version + 1) % 256
-        
+
         # Update the version file
-        with open(new_version_path, "rb+") as f:
-            f.seek(0)
-            f.write(bytes([new_version]))
-        
-        print(f"Updated {version_filename}: version {latest_version} → {new_version}")
+        # with open(new_version_path, "rb+") as f:
+        #     f.seek(0)
+            # Intentionally disabled actual write of incremented version per request
+            # f.write(bytes([new_version]))
+
+        #print(f"Updated {version_filename}: version {latest_version} → {new_version} (write disabled)")
     
     # Then copy all files from new_dir to latest_dir
     print("\nCopying files...")
