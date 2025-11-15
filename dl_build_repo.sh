@@ -29,19 +29,20 @@ find "$MAPS_DIR" -type f -name "*.version" | sort | while read -r version_file; 
     echo "$filename.zip"
     file="$MAPS_DIR/$filename.zip"
     rm -rf "$file"
-    zip -q "$file" "$GAME/${filename}."* -x '*.zip' '*.dzo.*'
+    zip -q "$file" "$GAME/${filename}."* -x '*.zip' '*.dzo.*' '*.sha1'
+    sha1sum "$file" | awk '{print $1}' | xxd -r -p > "$file.sha1"
 
     echo "$filename.dzo.zip"
     file="$MAPS_DIR/$filename.dzo.zip"
     rm -rf "$file"
-    zip -q "$file" "$GAME/${filename}."* -x '*.zip'
+    zip -q "$file" "$GAME/${filename}."* -x '*.zip' '*.sha1'
 done
 
 # Build Mega Zip
 echo "$(basename $OUT_ZIP)"
 cd $BASE_PATH
 rm -rf "$OUT_ZIP"
-zip -rq "$OUT_ZIP" "$GAME" horizon_cmaps_readme.txt horizon_unix_update_cmaps.sh horizon_windows_update_cmaps.ps1 -x "$GAME/*.zip" "$GAME/*.dzo.*"
+zip -rq "$OUT_ZIP" "$GAME" horizon_cmaps_readme.txt horizon_unix_update_cmaps.sh horizon_windows_update_cmaps.ps1 -x "$GAME/*.zip" "$GAME/*.dzo.*" "$GAME/*.sha1"
 
 # Build Index File
 rm -rf $INDEX_PATH
